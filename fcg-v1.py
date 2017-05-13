@@ -34,7 +34,7 @@ class NounPhrase(Construction):
         noun.right_of = article
     def contribute(article, noun, phrase):
         article.number = noun.number
-        noun.syn_func.head = noun_phrase
+        noun.syn_func.head = phrase
         article.syn_func.determiner = noun
         phrase.referent = noun.referent
         phrase.category = 'NP'
@@ -42,12 +42,25 @@ class NounPhrase(Construction):
         phrase.agreement = noun.number
 
 class Structure(object):
-    def __init__(self):
-        pass
+    def __init__(self, base=None):
+        if base is None:
+            base = self
+        self._base = base
     def __getattr__(self, key):
-        v = Structure()
+        v = Structure(base=self._base)
         self.__dict__[key] = v
         return v
+    def extract(self):
+        settings = []
+        for k, v in self.__dict__.items():
+            if not k.startswith('_'):
+                if isinstance(v, Structure) and v._base==self._base:
+                    for kk, vv in v.extract():
+                        settings.append(('.'.join([k, kk]), vv))
+                else:
+                    settings.append((k, v))
+        return settings
+
 
 class DummyStructure(object):
     def __init__(self, name, base=None):
@@ -164,9 +177,21 @@ class World(object):
         for fn in ['produce', 'comprehend']:
             if fn != style:
                 getattr(c, fn).im_func(*items)
-        getattr(c, 'contribute').im_func(*items)
 
         self.applied.add((c, tuple(items)))
+
+        contribute = getattr(c, 'contribute').im_func
+        args = inspect.getargspec(contribute).args
+        while len(args) > len(items):
+            items.append(self.make_structure())
+        contribute(*items)
+
+
+    def display(self):
+        for s in self.structures:
+            print s
+            for k, v in s.extract():
+                print '  %s: %r' % (k, v)
 
 
 
@@ -174,16 +199,20 @@ class World(object):
 world = World()
 s1 = world.make_structure()
 s1.meaning.animal_type = 'CAT'
-s1.referent = 'obj-1'
+s1.meaning.object = 'obj-1'
 s2 = world.make_structure()
 s2.meaning.definite = 'TRUE'
-s2.referent = 'obj-1'
+s2.meaning.object = 'obj-1'
 
 world.add_construction(Cat)
 world.add_construction(The)
 world.add_construction(NounPhrase)
 
+world.display()
 world.step('produce')
+world.display()
 world.step('produce')
+world.display()
 world.step('produce')
+world.display()
 
