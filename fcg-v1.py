@@ -216,3 +216,26 @@ world.display()
 world.step('produce')
 world.display()
 
+
+
+
+world = World()
+s1 = world.make_structure()
+s1.form = 'the'
+s2 = world.make_structure()
+s2.form = 'cat'
+s1.left_of = s2
+s2.right_of = s1
+
+world.add_construction(Cat)
+world.add_construction(The)
+world.add_construction(NounPhrase)
+
+world.display()
+world.step('comprehend')
+world.display()
+world.step('comprehend')
+world.display()
+world.step('comprehend')
+world.display()
+
