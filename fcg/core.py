@@ -137,7 +137,7 @@ class FCG(object):
             return
 
         c, items = m[0]
-        print 'applying', c, items
+        print 'applying %s.%s(%s)' % (c.__name__, style, ','.join(x._id for x in items))
 
         for fn in ['produce', 'comprehend']:
             if fn != style:
